@@ -31,3 +31,6 @@ Editor/IDE
 .idea/
 .vscode/
 .direnv
+
+## Custom
+build/

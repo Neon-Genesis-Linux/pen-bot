@@ -6,14 +6,17 @@ Pen bot is a community-built Discord bot for the [Neon Genesis Linux](https://di
 
 ## Architecture
 
-This repository follows a "monorepo-like" structure using Go modules, allowing modular bot construction. The codebase is divided into the following modules:
+The repository structure follows the practices outlined in [golang-standards/project-layout](https://github.com/golang-standards/project-layout/blob/master/README.md).
+It is a monorepo with a single root Go module and multiple bot binaries.
 
-- **core**: Shared code and utilities used across all modules.
-- **community**: Snippets and fun commands for community engagement.
-- **moderation**: Moderation actions including jail, ban, mute, and other related functions.
-- **admin**: Reserved for future administrative features (no planned features yet).
+- `cmd/` contains `main.go` entrypoints for all the resulting bot binaries:
+  - `pen-fun/`: the first bot, using the `community` package
+- `internal/` contains reusable library packages:
+  - `community/`: community engagement and fun commands
+  - `core/`: shared bot startup and common utilities
+  - `moderation/`: moderation actions
 
-This modular design enables users to build custom bots by selecting and combining only the necessary modules. It supports multiple bots with different purposes and Discord permission requirements from a single codebase, facilitating easy deployment orchestration.
+This design keeps shared code in one repository while letting each bot import only the packages it needs. Modules register their commands with the core registry for centralized dispatch.
 
 ## Installation
 
@@ -37,9 +40,9 @@ This modular design enables users to build custom bots by selecting and combinin
    nix develop
    ```
 
-3. Install dependencies:
+3. Install dependencies for the repository:
    ```bash
-   go mod download
+   go mod tidy
    ```
 
 ## Usage
@@ -49,17 +52,23 @@ This modular design enables users to build custom bots by selecting and combinin
 Create a `.env` file in the root directory with your bot token:
 
 ```env
-DISCORD_BOT_TOKEN=your_bot_token_here
+BOT_TOKEN=your_bot_token_here
 ```
 
 **Note**: Bot tokens are sensitive information. Manage them securely at the [Discord Developer Portal](https://discord.com/developers/applications).
 
 ### Deployment
 
-Deploy the bot using Docker Compose:
+Deploy the pen-fun bot using Docker Compose:
 
 ```bash
-docker-compose up --build
+docker-compose up
+```
+
+Or build the bot directly:
+
+```bash
+go build -o pen-fun ./cmd/pen-fun
 ```
 
 The `docker-compose.yml` file handles the build and deployment process with hot-reload for development.
@@ -79,4 +88,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Golings](https://github.com/mauricioabreu/golings) - Learning Go exercises
 - [MCP for Developers](https://github.com/mrjoshuak/godoc-mcp) - Go documentation tool for LLM agents
 - [Uber Go Style Guide](https://github.com/uber-go/guide) - Go coding standards at Uber
-
+- [Golang Standards project layout](https://github.com/golang-standards/project-layout)

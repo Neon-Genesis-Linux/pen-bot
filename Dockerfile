@@ -11,7 +11,7 @@ COPY . .
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
-    go build -trimpath -ldflags="-s -w" -o /output/pen-bot ./cmd
+    go build -trimpath -ldflags="-s -w" -o /output/pen-bot ./cmd/pen-fun
 
 FROM gcr.io/distroless/static-debian13
 
