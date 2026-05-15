@@ -5,8 +5,6 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
-	"strings"
-	"sync"
 	"syscall"
 
 	"github.com/disgoorg/disgo"
@@ -14,47 +12,6 @@ import (
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/gateway"
 )
-
-var (
-	commandRegistry = make(map[string]func(*events.MessageCreate))
-	registryMutex   sync.RWMutex
-	botPrefix       = "!" // configurable command prefix
-)
-
-// SetBotPrefix sets the command prefix (default is "!")
-func SetBotPrefix(prefix string) {
-	botPrefix = prefix
-}
-
-// RegisterCommand registers a command handler
-func RegisterCommand(command string, handler func(*events.MessageCreate)) {
-	registryMutex.Lock()
-	defer registryMutex.Unlock()
-	commandRegistry[command] = handler
-}
-
-// DispatchCommand dispatches a message to the appropriate command handler
-func DispatchCommand(event *events.MessageCreate) {
-	if event.Message.Author.Bot {
-		return
-	}
-	content := strings.TrimSpace(event.Message.Content)
-	if !strings.HasPrefix(content, botPrefix) {
-		return
-	}
-	parts := strings.Fields(content)
-	if len(parts) == 0 {
-		return
-	}
-	// Remove prefix from command to match registry key
-	command := strings.TrimPrefix(parts[0], botPrefix)
-	registryMutex.RLock()
-	handler, exists := commandRegistry[command]
-	registryMutex.RUnlock()
-	if exists {
-		handler(event)
-	}
-}
 
 func Start(ctx context.Context, token string, listener func(*events.MessageCreate)) error {
 	slog.Info("starting pen bot...")
