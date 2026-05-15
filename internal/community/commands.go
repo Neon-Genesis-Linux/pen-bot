@@ -2,7 +2,7 @@ package community
 
 import (
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/core"
-	"github.com/disgoorg/disgo/discord"
+	"github.com/Neon-Genesis-Linux/pen-bot/internal/messaging"
 	"github.com/disgoorg/disgo/events"
 )
 
@@ -13,9 +13,9 @@ func Register() {
 }
 
 func handlePing(event *events.MessageCreate) {
-	_, _ = event.Client().Rest.CreateMessage(event.ChannelID, discord.NewMessageCreate().WithContent("pong"))
+	_ = messaging.SendReply(event, "pong")
 }
 
 func handlePong(event *events.MessageCreate) {
-	_, _ = event.Client().Rest.CreateMessage(event.ChannelID, discord.NewMessageCreate().WithContent("ping"))
+	_ = messaging.SendReply(event, "ping")
 }
