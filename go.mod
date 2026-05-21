@@ -4,6 +4,8 @@ go 1.26.2
 
 require github.com/disgoorg/disgo v0.19.3
 
+require github.com/lib/pq v1.12.3
+
 require (
 	github.com/disgoorg/godave v0.1.0 // indirect
 	github.com/disgoorg/json/v2 v2.0.0 // indirect

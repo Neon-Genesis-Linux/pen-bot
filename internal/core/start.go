@@ -8,7 +8,9 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
+	"github.com/Neon-Genesis-Linux/pen-bot/internal/db"
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/events"
@@ -78,10 +80,68 @@ func Start(ctx context.Context, token string, listener func(*events.MessageCreat
 		return err
 	}
 
+	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
+	defer cleanupCancel()
+	cleanupInterval := db.ParseCleanupIntervalEnv("DB_CACHE_CLEANUP_INTERVAL", 15)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("cache cleanup panicked", "recover", r)
+			}
+		}()
+		db.StartCleanup(cleanupCtx, cleanupInterval)
+	}()
+
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("db connect panicked", "recover", r)
+			}
+		}()
+		connectDBWithRetry(ctx)
+	}()
+
+	defer db.CloseDB()
+
 	slog.Info("pen bot is now running. Press CTRL-C to exit.")
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	<-s
 
-	return nil
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-s:
+		return nil
+	}
+}
+
+func connectDBWithRetry(ctx context.Context) {
+	var dbClient *db.DB
+	var err error
+
+	for attempt := range 10 {
+		dbClient, err = db.NewFromEnv()
+		if err == nil {
+			break
+		}
+		slog.Warn("db connection attempt failed", "attempt", attempt+1, "error", err)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(time.Duration(attempt+1) * 2 * time.Second):
+		}
+	}
+	if err != nil {
+		slog.Error("db unavailable after retries", "error", err)
+		return
+	}
+
+	if err := db.ApplyMigrations(ctx, dbClient); err != nil {
+		slog.Error("db migration failed", "error", err)
+		_ = dbClient.Close()
+		return
+	}
+
+	db.SetGlobalDB(dbClient)
+	slog.Info("db connected and ready")
 }
