@@ -91,3 +91,5 @@ repos:
     # security
     -   id: go-vulncheck-repo-mod
     -   id: go-sec-repo-mod
+    # style checkers
+    -   id: golangci-lint-repo-mod

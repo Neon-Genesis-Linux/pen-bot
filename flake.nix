@@ -9,6 +9,7 @@
         pkgs.go-tools
         pkgs.govulncheck
         pkgs.gosec
+        pkgs.golangci-lint
         ];
     };
 }
