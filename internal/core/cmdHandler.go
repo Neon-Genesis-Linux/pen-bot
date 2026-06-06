@@ -18,6 +18,7 @@ var (
 	rootCommand   = &commandNode{children: make(map[string]*commandNode)}
 	registryMutex sync.RWMutex
 	botPrefix     = "!" // configurable command prefix
+	aliasMap      = map[string]string{}
 )
 
 // SetBotPrefix updates the command prefix at runtime.
@@ -28,6 +29,18 @@ func SetBotPrefix(prefix string) {
 // GetBotPrefix returns the active command prefix.
 func GetBotPrefix() string {
 	return botPrefix
+}
+
+func RegisterAlias(alias string, target string) {
+	registryMutex.Lock()
+	defer registryMutex.Unlock()
+	aliasMap[alias] = target
+}
+
+func UnregisterAlias(alias string) {
+	registryMutex.Lock()
+	defer registryMutex.Unlock()
+	delete(aliasMap, alias)
 }
 
 // RegisterSimpleCommand registers a handler that ignores any arguments.
@@ -92,6 +105,9 @@ func DispatchCommand(event *events.MessageCreate) {
 		registryMutex.RLock()
 		defer registryMutex.RUnlock()
 
+		if t, ok := aliasMap[words[0]]; ok {
+			words[0] = t
+		}
 		node := rootCommand
 		var lastMatch int
 		for i, word := range words {
