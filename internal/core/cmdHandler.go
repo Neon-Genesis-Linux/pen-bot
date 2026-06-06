@@ -30,11 +30,16 @@ func GetBotPrefix() string {
 	return botPrefix
 }
 
-// RegisterCommand registers a top-level command handler.
-func RegisterCommand(command string, handler func(*events.MessageCreate)) {
+// RegisterSimpleCommand registers a handler that ignores any arguments.
+func RegisterSimpleCommand(command string, handler func(*events.MessageCreate)) {
 	RegisterCommandPath([]string{command}, func(event *events.MessageCreate, args []string) {
 		handler(event)
 	})
+}
+
+// RegisterCommand registers a handler that receives the raw arguments passed to the command.
+func RegisterCommand(command string, handler MessageCommandHandler) {
+	RegisterCommandPath([]string{command}, handler)
 }
 
 // RegisterCommandPath registers a handler for a path of nested command names.

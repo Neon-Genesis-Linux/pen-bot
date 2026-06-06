@@ -8,8 +8,8 @@ import (
 
 // Register registers community commands
 func Register() {
-	core.RegisterCommand("ping", handlePing)
-	core.RegisterCommand("pong", handlePong)
+	core.RegisterSimpleCommand("ping", handlePing)
+	core.RegisterSimpleCommand("pong", handlePong)
 }
 
 func handlePing(event *events.MessageCreate) {
