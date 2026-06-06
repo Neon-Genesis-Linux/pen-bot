@@ -86,26 +86,30 @@ func DispatchCommand(event *events.MessageCreate) {
 		return
 	}
 
-	registryMutex.RLock()
-	defer registryMutex.RUnlock()
-
-	node := rootCommand
 	var lastHandler MessageCommandHandler
-	var lastMatch int
-	for i, word := range words {
-		child, exists := node.children[word]
-		if !exists {
-			break
+	var args []string
+	func() {
+		registryMutex.RLock()
+		defer registryMutex.RUnlock()
+
+		node := rootCommand
+		var lastMatch int
+		for i, word := range words {
+			child, exists := node.children[word]
+			if !exists {
+				break
+			}
+			node = child
+			if node.handler != nil {
+				lastHandler = node.handler
+				lastMatch = i + 1
+			}
 		}
-		node = child
-		if node.handler != nil {
-			lastHandler = node.handler
-			lastMatch = i + 1
-		}
-	}
+		args = words[lastMatch:]
+	}()
 
 	if lastHandler != nil {
-		lastHandler(event, words[lastMatch:])
+		lastHandler(event, args)
 	}
 }
 
