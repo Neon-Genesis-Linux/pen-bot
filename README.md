@@ -31,7 +31,7 @@ This design keeps shared code in one repository while letting each bot import on
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Neon-Genesis-Linux/pen-bot.git
    cd pen-bot
    ```
 
