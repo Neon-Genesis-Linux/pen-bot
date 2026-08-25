@@ -25,11 +25,20 @@ linters:
     - intrange
     - misspell
     - nakedret
+    # NilAway needs the custom binary. See .custom-gcl.yml.
+    - nilaway
     - prealloc
     - revive
     - unconvert
     - unparam
   settings:
+    custom:
+      nilaway:
+        type: module
+        description: Static analysis tool to detect potential nil panics in Go code.
+        settings:
+          # First party code only.
+          include-pkgs: "github.com/Neon-Genesis-Linux/pen-bot"
     goconst:
       min-len: 3
       min-occurrences: 3

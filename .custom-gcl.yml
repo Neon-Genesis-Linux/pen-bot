@@ -1,0 +1,15 @@
+# Custom golangci-lint binary with NilAway module plugin.
+# Built via: golangci-lint custom (produces ./custom-gcl)
+# Reference: https://golangci-lint.run/docs/plugins/module-plugins/
+# NilAway docs: https://github.com/uber-go/nilaway#golangci-lint--v1570
+#
+# Version pinning policy:
+# - `version` tracks the golangci-lint release used in CI (.github/workflows/ci.yml)
+#   and by contributors (flake.nix devShell). Keep them in sync.
+# - Plugin `version` MUST match the `go.uber.org/nilaway` pin in go.mod
+#   (tool directive). Do not use `latest` — reproducible builds only.
+version: v2.13.2
+plugins:
+  - module: "go.uber.org/nilaway"
+    import: "go.uber.org/nilaway/cmd/gclplugin"
+    version: v0.0.0-20260808063849-8649a03c818a

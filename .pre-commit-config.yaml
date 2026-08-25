@@ -91,5 +91,13 @@ repos:
     # security
     -   id: go-vulncheck-repo-mod
     -   id: go-sec-repo-mod
-    # style checkers
-    -   id: golangci-lint-repo-mod
+    # Stock golangci hook not used. NilAway needs the custom binary.
+-   repo: local
+    hooks:
+    # All linters plus NilAway. Build once with `golangci-lint custom`.
+    -   id: custom-gcl
+        name: custom-gcl (golangci-lint + NilAway)
+        entry: ./custom-gcl run --timeout=5m ./...
+        language: system
+        types: [go]
+        pass_filenames: false
