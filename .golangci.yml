@@ -71,4 +71,4 @@ formatters:
     - goimports
   settings:
     goimports:
-      local-prefixes: github.com/Neon-Genesis-Linux/pen-bot
+      local-prefixes: [github.com/Neon-Genesis-Linux/pen-bot]
