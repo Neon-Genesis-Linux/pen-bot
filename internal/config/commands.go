@@ -4,9 +4,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/disgoorg/disgo/events"
+
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/core"
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/messaging"
-	"github.com/disgoorg/disgo/events"
 )
 
 const ownerEnv = "BOT_OWNER_ID"

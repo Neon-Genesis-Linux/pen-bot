@@ -9,7 +9,7 @@ import (
 
 func TestDispatchExactMatch(t *testing.T) {
 	called := false
-	RegisterSimpleCommand("test-exact", func(e *events.MessageCreate) { called = true })
+	RegisterSimpleCommand("test-exact", func(_ *events.MessageCreate) { called = true })
 
 	DispatchCommand(&events.MessageCreate{
 		GenericMessage: &events.GenericMessage{
@@ -27,7 +27,7 @@ func TestDispatchExactMatch(t *testing.T) {
 
 func TestDispatchIgnoresBot(t *testing.T) {
 	called := false
-	RegisterSimpleCommand("test-bot", func(e *events.MessageCreate) { called = true })
+	RegisterSimpleCommand("test-bot", func(_ *events.MessageCreate) { called = true })
 
 	DispatchCommand(&events.MessageCreate{
 		GenericMessage: &events.GenericMessage{
@@ -45,7 +45,7 @@ func TestDispatchIgnoresBot(t *testing.T) {
 
 func TestDispatchNoPrefix(t *testing.T) {
 	called := false
-	RegisterSimpleCommand("test-noprefix", func(e *events.MessageCreate) { called = true })
+	RegisterSimpleCommand("test-noprefix", func(_ *events.MessageCreate) { called = true })
 
 	DispatchCommand(&events.MessageCreate{
 		GenericMessage: &events.GenericMessage{
@@ -61,7 +61,7 @@ func TestDispatchNoPrefix(t *testing.T) {
 	}
 }
 
-func TestDispatchUnknownCommand(t *testing.T) {
+func TestDispatchUnknownCommand(_ *testing.T) {
 	DispatchCommand(&events.MessageCreate{
 		GenericMessage: &events.GenericMessage{
 			Message: discord.Message{
@@ -78,7 +78,7 @@ func TestCustomPrefix(t *testing.T) {
 	t.Cleanup(func() { botPrefix = oldPrefix })
 
 	called := false
-	RegisterSimpleCommand("test-custom", func(e *events.MessageCreate) { called = true })
+	RegisterSimpleCommand("test-custom", func(_ *events.MessageCreate) { called = true })
 
 	DispatchCommand(&events.MessageCreate{
 		GenericMessage: &events.GenericMessage{

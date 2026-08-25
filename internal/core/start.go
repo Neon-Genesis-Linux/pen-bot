@@ -8,11 +8,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Neon-Genesis-Linux/pen-bot/internal/db"
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/gateway"
+
+	"github.com/Neon-Genesis-Linux/pen-bot/internal/db"
 )
 
 func Start(ctx context.Context, token string, listener func(*events.MessageCreate)) error {

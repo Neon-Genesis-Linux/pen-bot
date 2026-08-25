@@ -102,13 +102,13 @@ func TestConcurrentAccess(t *testing.T) {
 
 	done := make(chan struct{}, 2)
 	go func() {
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			db.SetCacheEntry("race-key", []byte("v"), time.Minute)
 		}
 		done <- struct{}{}
 	}()
 	go func() {
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			db.GetCacheEntry("race-key")
 		}
 		done <- struct{}{}

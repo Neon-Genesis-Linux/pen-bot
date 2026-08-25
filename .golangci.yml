@@ -1,0 +1,74 @@
+# golangci-lint v2 configuration.
+# Reference: https://golangci-lint.run/docs/linters/
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  # "standard" = errcheck, govet, ineffassign, staticcheck, unused
+  default: standard
+  enable:
+    # correctness & bug detection
+    - bodyclose
+    - copyloopvar
+    - errorlint
+    - nilnesserr
+    - rowserrcheck
+    - sqlclosecheck
+    - wastedassign
+    # security parity with the pre-commit gosec hook
+    - gosec
+    # style & hygiene
+    - goconst
+    - intrange
+    - misspell
+    - nakedret
+    - prealloc
+    - revive
+    - unconvert
+    - unparam
+  settings:
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    revive:
+      # Curated subset; intentionally excludes the `exported` and
+      # `package-comments` doc-comment requirements for now.
+      rules:
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: empty-block
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: unused-parameter
+        - name: var-declaration
+        - name: var-naming
+  exclusions:
+    rules:
+      # Tests routinely ignore returned errors and pass fixture values.
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+          - unparam
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes: github.com/Neon-Genesis-Linux/pen-bot

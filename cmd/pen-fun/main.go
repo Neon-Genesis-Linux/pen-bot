@@ -5,11 +5,12 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/disgoorg/disgo/events"
+
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/community"
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/config"
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/core"
 	_ "github.com/Neon-Genesis-Linux/pen-bot/internal/logger"
-	"github.com/disgoorg/disgo/events"
 )
 
 func main() {

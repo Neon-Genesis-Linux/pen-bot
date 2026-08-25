@@ -45,7 +45,7 @@ func UnregisterAlias(alias string) {
 
 // RegisterSimpleCommand registers a handler that ignores any arguments.
 func RegisterSimpleCommand(command string, handler func(*events.MessageCreate)) {
-	RegisterCommandPath([]string{command}, func(event *events.MessageCreate, args []string) {
+	RegisterCommandPath([]string{command}, func(event *events.MessageCreate, _ []string) {
 		handler(event)
 	})
 }
