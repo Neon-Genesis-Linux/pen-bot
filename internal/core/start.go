@@ -10,29 +10,38 @@ import (
 
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
-	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/gateway"
+	"github.com/disgoorg/disgo/handler"
+	"github.com/disgoorg/snowflake/v2"
 
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/db"
 )
 
-func Start(ctx context.Context, token string, listener func(*events.MessageCreate)) error {
+func Start(ctx context.Context, token string, guildIDs []snowflake.ID) error {
 	slog.Info("starting pen bot...")
 	slog.Info("disgo version", slog.String("version", disgo.Version))
 
+	if len(guildIDs) > 0 {
+		slog.Info("syncing commands to guilds", slog.Int("guild_count", len(guildIDs)))
+	} else {
+		slog.Info("syncing commands globally")
+	}
+	slog.Info("configured gateway intents", slog.Int64("intents", int64(requiredIntents)))
+
 	client, err := disgo.New(token,
 		bot.WithGatewayConfigOpts(
-			gateway.WithIntents(
-				gateway.IntentGuildMessages,
-				gateway.IntentMessageContent,
-			),
+			gateway.WithIntents(requiredIntents),
 		),
-		bot.WithEventListenerFunc(listener),
+		bot.WithEventListeners(router),
 	)
 	if err != nil {
 		return err
 	}
 	defer client.Close(ctx)
+
+	if err = handler.SyncCommands(client, commandDefs, guildIDs); err != nil {
+		return err
+	}
 
 	if err = client.OpenGateway(ctx); err != nil {
 		return err

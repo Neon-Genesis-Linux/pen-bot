@@ -9,11 +9,10 @@ import (
 	"time"
 
 	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
 	"github.com/go-resty/resty/v2"
 
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/core"
-	"github.com/Neon-Genesis-Linux/pen-bot/internal/messaging"
 )
 
 const xkcdCommand = "xkcd"
@@ -37,17 +36,41 @@ type xkcdMetadata struct {
 }
 
 func registerXkcdCommands() {
-	// Commands
-	core.RegisterCommand(xkcdCommand, handleXkcdSpecific)
-	core.RegisterCommandPath([]string{xkcdCommand, "random"}, handleXkcdRandom)
-	core.RegisterCommandPath([]string{xkcdCommand, "r"}, handleXkcdRandom)
-	core.RegisterCommandPath([]string{xkcdCommand, "latest"}, handleXkcdCurrent)
-	core.RegisterCommandPath([]string{xkcdCommand, "l"}, handleXkcdCurrent)
-	core.RegisterCommandPath([]string{xkcdCommand, "current"}, handleXkcdCurrent)
-	core.RegisterCommandPath([]string{xkcdCommand, "c"}, handleXkcdCurrent)
+	core.RegisterCommands(
+		discord.SlashCommandCreate{
+			Name:        xkcdCommand,
+			Description: "Fetch an xkcd comic",
+			Options: []discord.ApplicationCommandOption{
+				discord.ApplicationCommandOptionSubCommand{
+					Name:        "get",
+					Description: "Fetch a specific comic by number",
+					Options: []discord.ApplicationCommandOption{
+						discord.ApplicationCommandOptionInt{
+							Name:        "number",
+							Description: "The comic number to fetch",
+							Required:    true,
+							MinValue:    new(int),
+						},
+					},
+				},
+				discord.ApplicationCommandOptionSubCommand{
+					Name:        "random",
+					Description: "Fetch a random xkcd comic",
+				},
+				discord.ApplicationCommandOptionSubCommand{
+					Name:        "latest",
+					Description: "Fetch the latest xkcd comic",
+				},
+			},
+		},
+	)
 
-	// Aliases
-	core.RegisterAlias("xk", xkcdCommand)
+	h := core.Mux()
+	h.Route("/"+xkcdCommand, func(r handler.Router) {
+		r.SlashCommand("/get", handleXkcdGet)
+		r.SlashCommand("/random", handleXkcdRandom)
+		r.SlashCommand("/latest", handleXkcdLatest)
+	})
 }
 
 func getXkcdMetadata(numStr string) (xkcdMetadata, error) {
@@ -71,50 +94,41 @@ func getXkcdMetadata(numStr string) (xkcdMetadata, error) {
 	return metadata, nil
 }
 
-func handleXkcdCurrent(event *events.MessageCreate, _ []string) {
+func handleXkcdLatest(_ discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	metadata, err := getXkcdMetadata("")
 	if err != nil {
-		_ = messaging.SendReply(event, "Unable to fetch metadata for current xkcd")
-		return
+		return e.CreateMessage(discord.MessageCreate{Content: "Unable to fetch metadata for current xkcd"})
 	}
-	sendXkcd(event, metadata)
+	return sendXkcd(e, metadata)
 }
 
-func handleXkcdSpecific(event *events.MessageCreate, args []string) {
-	if len(args) == 0 {
-		handleXkcdCurrent(event, []string{})
-		return
+func handleXkcdGet(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	num, ok := data.OptInt("number")
+	if !ok {
+		return e.CreateMessage(discord.MessageCreate{Content: "Missing required `number` parameter."})
 	}
-	if _, err := strconv.Atoi(args[0]); err != nil {
-		_ = messaging.SendReply(event, "Parameter must be a valid integer.")
-		return
-	}
-	metadata, err := getXkcdMetadata(args[0])
+	metadata, err := getXkcdMetadata(strconv.Itoa(num))
 	if err != nil {
-		_ = messaging.SendReply(event, fmt.Sprintf("Unable to fetch metadata for xkcd #%s", args[0]))
-		return
+		return e.CreateMessage(discord.MessageCreate{Content: fmt.Sprintf("Unable to fetch metadata for xkcd #%d", num)})
 	}
-	sendXkcd(event, metadata)
+	return sendXkcd(e, metadata)
 }
 
-func handleXkcdRandom(event *events.MessageCreate, _ []string) {
+func handleXkcdRandom(_ discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	resp, err := xkcdClient.R().Get("https://c.xkcd.com/random/comic/")
 	if err != nil {
 		slog.Error("XKCD: random fetch error", slog.Any("error", err))
-		_ = messaging.SendReply(event, "Unable to fetch random xkcd")
-		return
+		return e.CreateMessage(discord.MessageCreate{Content: "Unable to fetch random xkcd"})
 	}
 
 	if resp.StatusCode() != http.StatusFound {
 		slog.Error("XKCD: unexpected status", slog.Int("status", resp.StatusCode()))
-		_ = messaging.SendReply(event, "Unexpected response from xkcd")
-		return
+		return e.CreateMessage(discord.MessageCreate{Content: "Unexpected response from xkcd"})
 	}
 
 	loc := resp.Header().Get("Location")
 	if loc == "" {
-		_ = messaging.SendReply(event, "No redirect location found")
-		return
+		return e.CreateMessage(discord.MessageCreate{Content: "No redirect location found"})
 	}
 
 	loc = strings.TrimSuffix(loc, "/")
@@ -122,19 +136,17 @@ func handleXkcdRandom(event *events.MessageCreate, _ []string) {
 
 	if _, err := strconv.Atoi(numStr); err != nil {
 		slog.Error("XKCD: failed to parse comic number", slog.String("location", loc))
-		_ = messaging.SendReply(event, "Failed to parse redirected comic number")
-		return
+		return e.CreateMessage(discord.MessageCreate{Content: "Failed to parse redirected comic number"})
 	}
 
 	metadata, err := getXkcdMetadata(numStr)
 	if err != nil {
-		_ = messaging.SendReply(event, fmt.Sprintf("Unable to fetch metadata for xkcd #%s", numStr))
-		return
+		return e.CreateMessage(discord.MessageCreate{Content: fmt.Sprintf("Unable to fetch metadata for xkcd #%s", numStr)})
 	}
-	sendXkcd(event, metadata)
+	return sendXkcd(e, metadata)
 }
 
-func sendXkcd(event *events.MessageCreate, metadata xkcdMetadata) {
+func sendXkcd(e *handler.CommandEvent, metadata xkcdMetadata) error {
 	embed := discord.NewEmbed().
 		WithTitle(metadata.Title).
 		WithURL(fmt.Sprintf("https://xkcd.com/%d", metadata.Num)).
@@ -142,8 +154,5 @@ func sendXkcd(event *events.MessageCreate, metadata xkcdMetadata) {
 		WithImage(metadata.Img).
 		WithFooter(fmt.Sprintf("xkcd #%d — %s/%s/%s", metadata.Num, metadata.Month, metadata.Day, metadata.Year), "").
 		WithColor(0x96A8C8)
-	builder := discord.NewMessageCreate().
-		WithMessageReference(&discord.MessageReference{MessageID: &event.Message.ID}).
-		AddEmbeds(embed)
-	_, _ = event.Client().Rest.CreateMessage(event.ChannelID, builder)
+	return e.CreateMessage(discord.MessageCreate{Embeds: []discord.Embed{embed}})
 }
