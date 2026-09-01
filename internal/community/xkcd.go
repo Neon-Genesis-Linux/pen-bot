@@ -19,7 +19,9 @@ const xkcdCommand = "xkcd"
 
 var xkcdClient = resty.New().
 	SetTimeout(10 * time.Second).
-	SetRedirectPolicy(resty.NoRedirectPolicy())
+	SetRedirectPolicy(resty.RedirectPolicyFunc(func(_ *http.Request, _ []*http.Request) error {
+		return http.ErrUseLastResponse
+	}))
 
 type xkcdMetadata struct {
 	Title      string `json:"title"`
@@ -121,7 +123,7 @@ func handleXkcdRandom(_ discord.SlashCommandInteractionData, e *handler.CommandE
 		return e.CreateMessage(discord.MessageCreate{Content: "Unable to fetch random xkcd"})
 	}
 
-	if resp.StatusCode() != http.StatusFound {
+	if resp.StatusCode() < http.StatusMultipleChoices || resp.StatusCode() >= http.StatusBadRequest {
 		slog.Error("XKCD: unexpected status", slog.Int("status", resp.StatusCode()))
 		return e.CreateMessage(discord.MessageCreate{Content: "Unexpected response from xkcd"})
 	}
