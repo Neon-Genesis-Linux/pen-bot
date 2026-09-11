@@ -16,8 +16,13 @@ import (
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/db"
 )
 
+var (
+	Version = "dev"
+	Commit  = "dev"
+)
+
 func Start(ctx context.Context, token string, listener func(*events.MessageCreate)) error {
-	slog.Info("starting pen bot...")
+	slog.Info("starting pen bot...", "version", Version, "commit", Commit)
 	slog.Info("disgo version", slog.String("version", disgo.Version))
 
 	client, err := disgo.New(token,
