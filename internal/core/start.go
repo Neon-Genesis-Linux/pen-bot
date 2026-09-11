@@ -17,12 +17,16 @@ import (
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/db"
 )
 
-// Start connects the bot to Discord, syncs the registered commands, and blocks
-// until ctx is cancelled or the process is interrupted. It reads the intents
-// and command definitions once, at startup, so anything registered afterwards
-// has no effect.
+var (
+	// Version is overridden via flake or Docker build args.
+	Version = "dev"
+	// Commit is overridden via flake or Docker build args.
+	Commit = "dev"
+)
+
+// Start is the central entrypoint to the bot.
 func Start(ctx context.Context, token string, guildIDs []snowflake.ID) error {
-	slog.Info("starting pen bot...")
+	slog.Info("starting pen bot...", "version", Version, "commit", Commit)
 	slog.Info("disgo version", slog.String("version", disgo.Version))
 
 	if len(guildIDs) > 0 {
