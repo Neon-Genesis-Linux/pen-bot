@@ -1,6 +1,13 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      # VERSION and COMMIT are baked into the binary via -ldflags in the
+      # Dockerfile. Defaults match flake.nix/CI; override from the host, e.g.:
+      #   COMMIT=$(git rev-parse HEAD) docker compose build
+      args:
+        VERSION: ${VERSION:-0.0.1-alpha}
+        COMMIT: ${COMMIT:-dev}
     pull_policy: build
     env_file:
       - .env
