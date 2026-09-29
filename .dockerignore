@@ -1,0 +1,7 @@
+# Mirrors the secret and build-artifact entries in .gitignore, which Docker
+# does not read. Without this, `COPY . .` pulls .env and the 52MB custom-gcl
+# binary into the build context.
+.git
+.env
+custom-gcl
+.direnv

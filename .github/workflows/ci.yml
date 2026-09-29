@@ -31,7 +31,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: custom-gcl
-          key: custom-gcl-v2.13.2-${{ hashFiles('.custom-gcl.yml') }}
+          key: custom-gcl-${{ hashFiles('.custom-gcl.yml') }}
 
       - name: Build custom-gcl (golangci-lint + NilAway)
         run: |
