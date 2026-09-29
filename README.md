@@ -71,7 +71,7 @@ Or build the bot directly:
 go build -o pen-fun ./cmd/pen-fun
 ```
 
-The `docker-compose.yml` file handles the build and deployment process with hot-reload for development.
+The `compose.yaml` file handles the build and deployment process with hot-reload for development.
 
 ## Contributing
 

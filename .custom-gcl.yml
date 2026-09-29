@@ -4,10 +4,12 @@
 # NilAway docs: https://github.com/uber-go/nilaway#golangci-lint--v1570
 #
 # Version pinning policy:
-# - `version` tracks the golangci-lint release used in CI (.github/workflows/ci.yml)
-#   and by contributors (flake.nix devShell). Keep them in sync.
-# - Plugin `version` MUST match the `go.uber.org/nilaway` pin in go.mod
-#   (tool directive). Do not use `latest` — reproducible builds only.
+# - `version` tracks the golangci-lint release used in CI (.github/workflows/ci.yml),
+#   which installs it explicitly. The Nix devShell uses floating
+#   `pkgs.golangci-lint`, so it may drift from this pin; `custom-gcl` is still
+#   built from the pinned version either way.
+# - Plugin `version` is the only NilAway pin this project tracks; it is not
+#   mirrored in go.mod. Do not use `latest` — reproducible builds only.
 version: v2.13.2
 plugins:
   - module: "go.uber.org/nilaway"
