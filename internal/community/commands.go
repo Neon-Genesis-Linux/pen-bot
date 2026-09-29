@@ -20,6 +20,7 @@ func Register() {
 		},
 	)
 	registerXkcdCommands()
+	registerTldrCommands()
 
 	h := core.Mux()
 	h.SlashCommand("/ping", handlePing)
