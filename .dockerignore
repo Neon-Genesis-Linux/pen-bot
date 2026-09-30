@@ -5,3 +5,12 @@
 .env
 custom-gcl
 .direnv
+
+# Documentation tooling. .venv is tens of megabytes of Python packages, which
+# `COPY . .` would otherwise send to a Go image build that never runs them.
+.venv/
+public/
+__pycache__/
+
+# uv.lock is deliberately NOT excluded: it is a build input, and excluding it
+# would make the documented `uv lock` regeneration path disagree with CI.

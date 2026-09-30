@@ -19,7 +19,7 @@ fragments.
 
 ## Verify
 
-Run the checks the repository defines, and report the real output:
+CI runs two workflows, and both must pass. This is what `ci.yml` runs:
 
 ```bash
 test -z "$(gofmt -l .)"
@@ -28,6 +28,17 @@ go vet ./...
 go test ./...
 ./custom-gcl run --timeout=5m ./...
 ```
+
+And this is what `docs.yml` runs, which builds the documentation tree and fails
+on any warning:
+
+```bash
+uv sync --frozen
+uv run sphinx-build -W -b html docs public
+```
+
+There is no pre-commit hook for the docs build, so that one has to be run by
+hand. `AGENTS.md` covers why the other hooks are worth running locally.
 
 Do not report a check as passing unless it was run and passed. Do not summarise
 test output into a claim it does not support. If a check could not be run, say

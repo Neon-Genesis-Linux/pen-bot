@@ -35,3 +35,10 @@ Editor/IDE
 ## Custom
 build/
 /custom-gcl
+
+# Sphinx HTML build output, per the command in docs/conf.py and docs.yml
+/public/
+
+# uv virtualenv, at the repository root because pyproject.toml is there
+.venv/
+__pycache__/

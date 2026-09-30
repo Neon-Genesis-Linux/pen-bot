@@ -7,11 +7,9 @@ cannot tell you:
   Conventional Commits format.
 - [AI_POLICY.md](AI_POLICY.md) — disclosure and the `Assisted-by:` trailer for
   tool-assisted work. Applies to agent-written code.
-- [DOCUMENTATION.md](DOCUMENTATION.md) — **not on `main` yet.** Both this file and
-  `CONTRIBUTING.md` link it, but it currently exists only on the local `docs`
-  branch (`git show docs:DOCUMENTATION.md`). It holds the Go doc comment rules CI
-  does not check. Read it before adding exported identifiers; expect the link to
-  404 until `docs` merges.
+- [DOCUMENTATION.md](DOCUMENTATION.md) — how documentation is written, which
+  content belongs where, and the Go doc comment rules CI does not check. Read it
+  before adding exported identifiers.
 
 ## Verify
 
@@ -25,6 +23,14 @@ go test ./...
 ./custom-gcl run --timeout=5m ./...
 ```
 
+`docs.yml` builds the documentation tree and fails on any warning, and both
+workflows must pass:
+
+```bash
+uv sync --frozen
+uv run sphinx-build -W -b html docs public
+```
+
 - **Use `./custom-gcl`, never `golangci-lint`.** Stock `golangci-lint run` aborts
   with `plugin(nilaway): plugin "nilaway" not found`, because `nilaway` is a
   module plugin. `custom-gcl` is a gitignored build of golangci-lint v2.13.2 +
@@ -35,10 +41,11 @@ go test ./...
   needed. Only `internal/db` has tests; everything else reports "no test files".
   Unexported-helper tests live in `package db`, public-API tests in
   `package db_test`.
-- `pre-commit run --all-files` is a superset (adds staticcheck, gosec,
-  govulncheck). `go-vulncheck-repo-mod` is **not** in CI and fails whenever the
-  local toolchain trails the patched Go release. That is a toolchain-version
-  signal, not a code defect — bump Go rather than deleting the hook.
+- `pre-commit run --all-files` is a superset of `ci.yml` (adds staticcheck,
+  gosec, govulncheck). There is no hook for the docs build, so run that by hand.
+  `go-vulncheck-repo-mod` is **not** in CI and fails whenever the local
+  toolchain trails the patched Go release. That is a toolchain-version signal,
+  not a code defect — bump Go rather than deleting the hook.
 
 ## Layout
 
@@ -59,7 +66,7 @@ One root module, `github.com/Neon-Genesis-Linux/pen-bot`, one binary:
 - `internal/logger` works solely through a blank import; its `init` is the whole
   package. Drop `_ ".../internal/logger"` and the build still compiles while the
   bot silently falls back to slog's default handler.
-- `internal/moderation` is an empty stub that `main.go` does not register.
+- `internal/moderation` is registered by `main.go`; it holds `/self-timeout`.
 
 ## Lint rules that reject correct-looking code
 
@@ -106,10 +113,10 @@ One root module, `github.com/Neon-Genesis-Linux/pen-bot`, one binary:
 - For the database, `DATABASE_URL` wins outright; otherwise `DB_HOST`, `DB_PORT`,
   `DB_USER`, `DB_PASSWORD`, `DB_NAME` are composed, and `DB_BOT_INSTANCE_ID`
   renames the database to `pen_bot_<id>`. `POSTGRES_PASSWORD` is compose-only.
-- The compose file is `compose.yaml` (Compose v2); README's `docker-compose up`
-  is stale. Use `docker compose up`, or `docker compose watch` to honour the
-  `develop.watch` rebuild. Keep `.dockerignore` — it is what keeps `.env` and the
-  52MB `custom-gcl` out of the build context.
+- The compose file is `compose.yaml` (Compose v2); use `docker compose up`, or
+  `docker compose watch` to honour the `develop.watch` rebuild. Keep
+  `.dockerignore` — it is what keeps `.env` and the 52MB `custom-gcl` out of the
+  build context.
 
 ## Workflow
 
