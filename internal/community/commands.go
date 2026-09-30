@@ -7,7 +7,10 @@ import (
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/core"
 )
 
-// Register registers community commands
+// Register adds the community slash commands to the bot's command list and
+// routes their handlers. Call it before Start: a command is only synced to
+// Discord if its definition is registered here, and only answered if a handler
+// is routed for it.
 func Register() {
 	core.RegisterCommands(
 		discord.SlashCommandCreate{

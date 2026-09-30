@@ -1,0 +1,26 @@
+# Python tooling for building docs/.
+#
+# Sphinx and MyST are the only Python dependencies in this repository, and they
+# exist to build docs/. Keep them at the root rather than in docs/ so uv's
+# virtualenv lands outside the Sphinx source directory: a .venv inside docs/
+# makes Sphinx parse every dependency's README and LICENSE as project content,
+# and the -W build then fails on a clean checkout.
+#
+# The manifest lives at the root for that reason alone, not because this is a
+# distributable Python package.
+#
+# requires-python is >=3.12 because Sphinx requires it. uv refuses to resolve
+# anything looser, which is the correct behaviour.
+#
+# uv.lock is committed, the same way go.sum is: it is what makes a build
+# reproducible. Do not add it to .gitignore.
+
+[project]
+name = "pen-bot-docs"
+version = "0.0.0"
+description = "Documentation tooling for pen-bot. Not a distributable package."
+requires-python = ">=3.12"
+dependencies = [
+    "sphinx==9.1.0",
+    "myst-parser==5.1.0",
+]

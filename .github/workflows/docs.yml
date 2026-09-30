@@ -1,0 +1,55 @@
+# Builds docs/ and fails the build on any Sphinx warning.
+#
+# The -W flag is the point of this workflow. Without it a page can reference a
+# document that does not exist and still go green, which is the failure mode
+# documented in docs/INDEX.md.
+#
+# setup-uv is pinned to an exact version rather than a major tag. Upstream
+# stopped publishing floating major tags at v8, so @v10 does not exist; the
+# exact tag also keeps Dependabot able to propose bumps, the same reason
+# golangci-lint is pinned to v2.13.2 in ci.yml.
+#
+# uv installs its own interpreter, so there is no setup-python step. The floor
+# comes from pyproject.toml, which requires >=3.12 because Sphinx does.
+#
+# Publishing to GitHub Pages is not set up. Pages is disabled on this
+# repository, and this fork's main is not upstream's main, so a deploy job
+# would need both a repository setting and a decision about which branch is
+# authoritative before it could work. Until then this is a gate, not a site.
+name: docs
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: "0.12.17"
+          enable-cache: true
+
+      # --frozen means the committed uv.lock is used as-is. Without it uv would
+      # re-resolve, and the build would depend on whatever is on PyPI that day.
+      - name: Sync the locked environment
+        run: uv sync --frozen
+
+      - name: Build docs
+        run: uv run sphinx-build -W -b html docs public
+
+      # The build is only worth something if the output is still there.
+      - name: Check the build produced output
+        run: test -f public/INDEX.html
+
+      # uv.lock must match pyproject.toml. If they drift, uv sync --frozen
+      # above fails, which is the intended signal rather than a silent re-resolve.
+      - name: Check the lockfile is current
+        run: uv lock --check
