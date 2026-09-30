@@ -77,6 +77,8 @@ The `compose.yaml` file handles the build and deployment process with hot-reload
 
 Contributions are welcome! Please follow the established code style and include tests for new features.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for what to read before editing, which checks to run and report, and the commit message format. If your change was written with AI or LLM tooling, [AI_POLICY.md](AI_POLICY.md) adds what to disclose and who stays responsible for it.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
