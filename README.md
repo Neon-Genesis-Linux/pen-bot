@@ -62,7 +62,7 @@ BOT_TOKEN=your_bot_token_here
 Deploy the pen-fun bot using Docker Compose:
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
 Or build the bot directly:
@@ -76,6 +76,9 @@ The `compose.yaml` file handles the build and deployment process with hot-reload
 ## Contributing
 
 Contributions are welcome! Please follow the established code style and include tests for new features.
+
+- [DOCUMENTATION.md](DOCUMENTATION.md) - how documentation is written and where each kind belongs
+- [docs/](docs/INDEX.md) - setup, architecture and operations
 
 ## License
 

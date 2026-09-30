@@ -10,6 +10,10 @@
         pkgs.govulncheck
         pkgs.gosec
         pkgs.golangci-lint
+        # Docs tooling. uv reads the committed uv.lock and provisions its own
+        # interpreter, so the Python version comes from pyproject.toml rather
+        # than from nixpkgs. Use `uv run sphinx-build ...` so the venv is used.
+        pkgs.uv
       ];
       # Auto-build the custom golangci-lint binary (stock linter set + NilAway
       # module plugin, see .custom-gcl.yml) when entering the shell, so that
