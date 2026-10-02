@@ -1,6 +1,7 @@
 package moderation
 
-// Register registers moderation commands with the bot
+// Register is a placeholder for the moderation commands, which are not
+// written yet. Nothing calls it.
 func Register() {
 	// TODO: implement moderation commands
 }

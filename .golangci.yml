@@ -21,6 +21,9 @@ linters:
     - gosec
     # style & hygiene
     - exhaustruct_v5
+    # Doc comments end in a period. The related `exported` and
+    # `package-comments` rules are off; see the revive block below.
+    - godot
     - goconst
     - intrange
     - misspell
@@ -53,8 +56,8 @@ linters:
         - log/slog\.HandlerOptions
         - github.com/disgoorg/disgo/discord\.MessageReference
     revive:
-      # Curated subset; intentionally excludes the `exported` and
-      # `package-comments` doc-comment requirements for now.
+      # Curated subset. `exported` and `package-comments` are off pending #47.
+      # Enabling them is a one-line change once the existing gaps are closed.
       rules:
         - name: context-as-argument
         - name: context-keys-type
