@@ -10,10 +10,12 @@ import (
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/community"
 	"github.com/Neon-Genesis-Linux/pen-bot/internal/core"
 	_ "github.com/Neon-Genesis-Linux/pen-bot/internal/logger"
+	"github.com/Neon-Genesis-Linux/pen-bot/internal/moderation"
 )
 
 func main() {
 	community.Register()
+	moderation.Register()
 
 	guildID := snowflake.GetEnv("GUILD_ID")
 	var guildIDs []snowflake.ID
