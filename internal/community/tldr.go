@@ -40,10 +40,6 @@ func tldrEmbed(title, desc string) discord.Embed {
 		WithFooter("tldr-pages", "https://tldr.sh/assets/img/icon.png")
 }
 
-func tldrErrorEmbed(desc string) discord.Embed {
-	return tldrEmbed("Whoops!", desc)
-}
-
 func registerTldrCommands() {
 	core.RegisterCommands(
 		discord.SlashCommandCreate{
@@ -136,24 +132,18 @@ func getTldrContent(platform, command string) (string, error) {
 func handleTldr(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	command, ok := data.OptString("command")
 	if !ok {
-		return e.CreateMessage(discord.MessageCreate{
-			Embeds: []discord.Embed{tldrErrorEmbed("Missing required `command` parameter.")},
-		})
+		return core.ReplyError(e, "Missing required `command` parameter.")
 	}
 
 	command = strings.ToLower(strings.TrimSpace(command))
 	command = strings.Join(strings.Fields(command), "-")
 
 	if command == "" {
-		return e.CreateMessage(discord.MessageCreate{
-			Embeds: []discord.Embed{tldrErrorEmbed("Please provide a valid command name.")},
-		})
+		return core.ReplyError(e, "Please provide a valid command name.")
 	}
 
 	if !tldrCommandPattern.MatchString(command) {
-		return e.CreateMessage(discord.MessageCreate{
-			Embeds: []discord.Embed{tldrErrorEmbed("That command name contains invalid characters.")},
-		})
+		return core.ReplyError(e, "That command name contains invalid characters.")
 	}
 
 	platform, ok := data.OptString("platform")
@@ -167,18 +157,12 @@ func handleTldr(data discord.SlashCommandInteractionData, e *handler.CommandEven
 	}
 
 	content, err := getTldrContent(platform, command)
-
 	if err != nil {
 		desc := "An error occurred while fetching the cheat sheet."
 		if errors.Is(err, errTldrNotFound) {
-			desc = "404: There's no one, but us chickens."
+			desc = "404: There's no one, but us penguins."
 		}
-
-		_, err := e.UpdateInteractionResponse(discord.MessageUpdate{
-			Embeds: &[]discord.Embed{tldrErrorEmbed(desc)},
-		})
-
-		return err
+		return core.EditError(e, desc)
 	}
 
 	return sendTldr(e, command, platform, content)

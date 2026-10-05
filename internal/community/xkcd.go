@@ -51,7 +51,7 @@ func registerXkcdCommands() {
 							Name:        "number",
 							Description: "The comic number to fetch",
 							Required:    true,
-							MinValue:    new(int),
+							MinValue:    new(1),
 						},
 					},
 				},
@@ -97,9 +97,13 @@ func getXkcdMetadata(numStr string) (xkcdMetadata, error) {
 }
 
 func handleXkcdLatest(_ discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	if err := e.DeferCreateMessage(false); err != nil {
+		return err
+	}
+
 	metadata, err := getXkcdMetadata("")
 	if err != nil {
-		return e.CreateMessage(discord.MessageCreate{Content: "Unable to fetch metadata for current xkcd"})
+		return core.EditError(e, "Unable to fetch metadata for current xkcd")
 	}
 	return sendXkcd(e, metadata)
 }
@@ -107,30 +111,39 @@ func handleXkcdLatest(_ discord.SlashCommandInteractionData, e *handler.CommandE
 func handleXkcdGet(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	num, ok := data.OptInt("number")
 	if !ok {
-		return e.CreateMessage(discord.MessageCreate{Content: "Missing required `number` parameter."})
+		return core.ReplyError(e, "Missing required `number` parameter.")
 	}
+
+	if err := e.DeferCreateMessage(false); err != nil {
+		return err
+	}
+
 	metadata, err := getXkcdMetadata(strconv.Itoa(num))
 	if err != nil {
-		return e.CreateMessage(discord.MessageCreate{Content: fmt.Sprintf("Unable to fetch metadata for xkcd #%d", num)})
+		return core.EditError(e, fmt.Sprintf("Unable to fetch metadata for xkcd #%d", num))
 	}
 	return sendXkcd(e, metadata)
 }
 
 func handleXkcdRandom(_ discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	if err := e.DeferCreateMessage(false); err != nil {
+		return err
+	}
+
 	resp, err := xkcdClient.R().Get("https://c.xkcd.com/random/comic/")
 	if err != nil {
 		slog.Error("XKCD: random fetch error", slog.Any("error", err))
-		return e.CreateMessage(discord.MessageCreate{Content: "Unable to fetch random xkcd"})
+		return core.EditError(e, "Unable to fetch random xkcd")
 	}
 
 	if resp.StatusCode() < http.StatusMultipleChoices || resp.StatusCode() >= http.StatusBadRequest {
 		slog.Error("XKCD: unexpected status", slog.Int("status", resp.StatusCode()))
-		return e.CreateMessage(discord.MessageCreate{Content: "Unexpected response from xkcd"})
+		return core.EditError(e, "Unexpected response from xkcd")
 	}
 
 	loc := resp.Header().Get("Location")
 	if loc == "" {
-		return e.CreateMessage(discord.MessageCreate{Content: "No redirect location found"})
+		return core.EditError(e, "No redirect location found")
 	}
 
 	loc = strings.TrimSuffix(loc, "/")
@@ -138,12 +151,12 @@ func handleXkcdRandom(_ discord.SlashCommandInteractionData, e *handler.CommandE
 
 	if _, err := strconv.Atoi(numStr); err != nil {
 		slog.Error("XKCD: failed to parse comic number", slog.String("location", loc))
-		return e.CreateMessage(discord.MessageCreate{Content: "Failed to parse redirected comic number"})
+		return core.EditError(e, "Failed to parse redirected comic number")
 	}
 
 	metadata, err := getXkcdMetadata(numStr)
 	if err != nil {
-		return e.CreateMessage(discord.MessageCreate{Content: fmt.Sprintf("Unable to fetch metadata for xkcd #%s", numStr)})
+		return core.EditError(e, fmt.Sprintf("Unable to fetch metadata for xkcd #%s", numStr))
 	}
 	return sendXkcd(e, metadata)
 }
@@ -156,5 +169,8 @@ func sendXkcd(e *handler.CommandEvent, metadata xkcdMetadata) error {
 		WithImage(metadata.Img).
 		WithFooter(fmt.Sprintf("xkcd #%d — %s/%s/%s", metadata.Num, metadata.Month, metadata.Day, metadata.Year), "").
 		WithColor(0x96A8C8)
-	return e.CreateMessage(discord.MessageCreate{Embeds: []discord.Embed{embed}})
+	_, err := e.UpdateInteractionResponse(discord.MessageUpdate{
+		Embeds: &[]discord.Embed{embed},
+	})
+	return err
 }
