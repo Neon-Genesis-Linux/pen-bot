@@ -24,6 +24,7 @@ func Register() {
 	)
 	registerXkcdCommands()
 	registerTldrCommands()
+	registerTimezoneCommands()
 
 	h := core.Mux()
 	h.SlashCommand("/ping", handlePing)
