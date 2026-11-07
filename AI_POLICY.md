@@ -25,6 +25,10 @@ Reading the codebase with a lookup tool is likewise not tool-generated
 contribution. [godoc-mcp](https://github.com/mrjoshuak/godoc-mcp), which this
 project recommends for godoc access, is the expected case.
 
+Even use that falls outside these guidelines is worth a passing mention when it
+would help a reviewer understand a contribution. Naming a formatter or helper
+costs little and never misleads.
+
 ### In scope
 
 These guidelines apply when a meaningful part of a contribution was not written
@@ -50,31 +54,16 @@ Say in the pull request description what tools were involved. More detail helps
 review and costs little:
 
 - Which tools were used, and which model, if you are able to say.
-- The prompts, if the change came from a single prompt or a short session. For
-  a longer session, summarise the prompts and the assistance given.
+- The input to the tools you used. For a single prompt or a short session,
+  include the prompts; for a longer one, summarise the prompts and the
+  assistance given. For non-generative tools that take a script or source,
+  include that too.
 - Which parts of the change came from the tool, if only some of it did.
 - How the change was tested, and with what.
 
 The disclosure belongs in the pull request, where a reviewer will see it. A
 commit message body is acceptable when the pull request description points at
 it.
-
-## Attribution
-
-Adding a trailer helps track how much of the project depends on which tools.
-Add one when a tool contributed:
-
-```
-Assisted-by: <tool or model name>
-```
-
-One trailer per tool, each on its own line. This is a convention, not a gate.
-Nothing in CI checks for it, and a pull request without one is not rejected on
-that basis. If no attribution is appropriate, leave it out.
-
-A generated commit message should describe what the change does, not that a tool
-produced it. The trailer is where the latter belongs. The message format itself
-is in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Responsibility
 
@@ -139,5 +128,5 @@ recalling where it saw it.
 - [AI Coding Assistants](https://docs.kernel.org/process/coding-assistants.html),
   the kernel's guidance for agents specifically.
 - [Submitting patches: the essential guide to getting your code into the kernel](https://docs.kernel.org/process/submitting-patches.html),
-  the source of the DCO and Assisted-by discussion above. Neither its DCO nor
+  the source of the DCO. Neither its DCO nor
   its email submission flow is adopted here.
