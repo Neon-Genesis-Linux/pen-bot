@@ -17,6 +17,7 @@
           just
           hadolint
           yamlfmt
+          dockerfmt
         ];
       };
     });

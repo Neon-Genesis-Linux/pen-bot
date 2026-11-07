@@ -3,7 +3,7 @@ dev:
 test:
     gotestsum --format testname
 lint:
-    golangci-lint run
+    ./custom-gcl run
     hadolint Dockerfile
 format:
     gofumpt -w -l .
