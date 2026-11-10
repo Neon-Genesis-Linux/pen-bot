@@ -36,6 +36,9 @@ Editor/IDE
 build/
 /custom-gcl
 
+# Local SQLite database, written by a bot run outside the container
+/data/
+
 # Sphinx HTML build output, per the command in docs/conf.py and docs.yml
 /public/
 

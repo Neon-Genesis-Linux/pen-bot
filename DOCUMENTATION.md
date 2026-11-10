@@ -210,8 +210,8 @@ func main() {
 :::
 
 :::{note}
-The bot retries its database connection in the background, so it starts and
-stays up even when Postgres is not yet reachable.
+The bot opens its database in the background, so it starts and stays up even
+when the database file cannot be reached.
 :::
 ````
 

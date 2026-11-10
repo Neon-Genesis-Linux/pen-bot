@@ -86,6 +86,13 @@ func Start(ctx context.Context, token string, guildIDs []snowflake.ID) error {
 	}
 }
 
+// connectDBWithRetry opens the database and applies the migrations to it.
+//
+// The database is a local file, so opening it normally succeeds on the first
+// attempt. The retry is for the case where the file is not reachable yet,
+// such as a volume that has not been mounted when the container starts. The
+// bot stays up while this runs, and runs without a database if it never
+// succeeds.
 func connectDBWithRetry(ctx context.Context) {
 	var dbClient *db.DB
 	var err error

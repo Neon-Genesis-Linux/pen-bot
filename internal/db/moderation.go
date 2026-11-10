@@ -4,19 +4,27 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 )
 
+// LogModeration records a moderation action.
 func LogModeration(ctx context.Context, db *DB, guildID, moderatorID, targetID, action, reason string) error {
 	if guildID == "" {
 		return fmt.Errorf("guildID required")
 	}
 	_, err := db.ExecContext(ctx, `
 	INSERT INTO moderation_logs (guild_id, moderator_id, target_id, action, reason, created_at)
-	VALUES ($1, $2, $3, $4, $5, now())
-	`, guildID, moderatorID, targetID, action, reason)
+	VALUES ($1, $2, $3, $4, $5, $6)
+	`, guildID, moderatorID, targetID, action, reason, time.Now().UTC())
 	return err
 }
 
+// GetModerationLogs returns moderation logs for a guild, newest first.
+//
+// A cursor pages through the history. The cursor names the position to
+// continue from, and the query returns the entries strictly after it, so a
+// caller walking the pages sees every entry exactly once even while new
+// entries are being written.
 func GetModerationLogs(ctx context.Context, db *DB, guildID string, limit int, cursor *ModerationCursor) ([]*ModerationLog, error) {
 	if guildID == "" {
 		return nil, fmt.Errorf("guildID required")
