@@ -11,10 +11,11 @@ documented by the comment above its declaration, and `go doc` renders those.
 
 ## Contents
 
-Pages are added to the toctree below as they are written. It stays commented out
-until those pages exist: an enabled toctree naming a missing document warns
-rather than failing, so the build would still go green and ship a broken
-navigation tree. Uncomment it once the pages land.
+Pages are added to the toctree below as they are written. Only documents that
+exist are listed: an enabled toctree naming a missing document warns rather
+than failing, so the build would still go green and ship a broken navigation
+tree. A page that is not listed is also a warning, so add the entry in the same
+change that adds the page.
 
 Sphinx treats that warning as an error only under `-W`, which
 `.github/workflows/docs.yml` passes on every push and pull request. Run it the
@@ -27,15 +28,12 @@ uv run sphinx-build -W -b html docs public
 
 The output directory is `public/` and is not tracked.
 
-<!--
 :::{toctree}
 :maxdepth: 2
 :caption: Contents
 
-SETUP
-ARCHITECTURE
+OPERATIONS/DATABASE
 :::
--->
 
 ## Planned documents
 

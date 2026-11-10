@@ -73,6 +73,11 @@ go build -o pen-fun ./cmd/pen-fun
 
 The `compose.yaml` file handles the build and deployment process with hot-reload for development.
 
+The bot stores its data in a SQLite file, so there is no database server to run
+and no credentials to configure. The compose file mounts a volume that holds
+the file. See [the database documentation](docs/OPERATIONS/DATABASE.md) for
+where the file lives, how to back it up and how to inspect it.
+
 ## Contributing
 
 Contributions are welcome! Please follow the established code style and include tests for new features.

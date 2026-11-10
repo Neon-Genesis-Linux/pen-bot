@@ -37,9 +37,10 @@ uv run sphinx-build -W -b html docs public
   NilAway from `.custom-gcl.yml`; `nix develop` builds it on shell entry. Re-run
   `golangci-lint custom` after editing `.custom-gcl.yml` or the pinned version.
 - **Focused runs:** `go test ./internal/db/...`, `go test -run TestExpiry
-  ./internal/db/`. Tests are pure unit tests — no Postgres, Discord, or network
-  needed. Only `internal/db` has tests; everything else reports "no test files".
-  Unexported-helper tests live in `package db`, public-API tests in
+  ./internal/db/`. Tests are pure unit tests — no Discord or network needed, and
+  the database tests need no server either: they open a SQLite file in a
+  temporary directory. Only `internal/db` has tests; everything else reports "no
+  test files". Unexported-helper tests live in `package db`, public-API tests in
   `package db_test`.
 - `pre-commit run --all-files` is a superset of `ci.yml` (adds staticcheck,
   gosec, govulncheck). There is no hook for the docs build, so run that by hand.
@@ -88,17 +89,52 @@ One root module, `github.com/Neon-Genesis-Linux/pen-bot`, one binary:
 
 ## Database
 
+- The database is SQLite, through `modernc.org/sqlite`. The driver is pure Go, so
+  the build stays `CGO_ENABLED=0` and the distroless image is unchanged. It
+  depends on `modernc.org/libc`, and upstream asks that the two stay in step:
+  Go's module resolution will not select a `libc` older than the one
+  `modernc.org/sqlite` requires, but a newer one can be selected, and an
+  incompatible one fails to compile rather than misbehaving.
+- Timestamps are **Unix milliseconds in an `INTEGER` column**, declared
+  `DATETIME`. Do not store them as text: the driver writes text while a column
+  default writes an integer, and SQLite then orders the column by kind rather
+  than by instant, so rows come back in the wrong order. The DSN parameters
+  `_time_integer_format=unix_milli` and `_inttotime=1` are what make the
+  driver read and write that representation.
+- The driver converts a timestamp on the way out **only when the column's
+  declared type is `DATE`, `DATETIME` or `TIMESTAMP`**. An aggregate or an
+  arithmetic expression over such a column has no declared type, so it comes
+  back as an integer and scanning it into a `time.Time` fails. Select the
+  column itself, or convert the integer in SQL.
+- The driver reads an integer back as milliseconds only when it is larger than
+  1e12, which is September 2001. A timestamp before that is silently read as
+  seconds. Every timestamp here is written by the running bot, so this cannot
+  happen; a column holding a historic timestamp would need care.
 - Migrations are `//go:embed`ed from `internal/db/migrations/` and applied by the
   running bot at startup (`db.ApplyMigrations`). There is no migration CLI. Add
   `NNN_name.sql`; the filename is recorded in `schema_migrations` and the file
   runs in one transaction.
-- The runner splits each file on `;`, so no semicolon may appear inside a string
-  literal, a dollar-quoted body, or a `DO $$` block. Keep migrations to plain
-  DDL.
+- A migration file is handed to the driver as one statement, not split on
+  semicolons, so a semicolon inside a string literal is safe. Keep migrations
+  to plain DDL anyway.
+- Primary keys are `INTEGER PRIMARY KEY AUTOINCREMENT`. The `AUTOINCREMENT` is
+  required: without it SQLite reuses an id after a delete, which breaks the
+  keyset pagination that walks a log by `(created_at, id)`.
+- An index that serves a query has to carry the order the query asks for. The
+  moderation log index ends with `id` because the pagination cursor compares
+  the pair `(created_at, id)`: without it SQLite sorts every page again with a
+  temporary B-tree over the whole table. `internal/db/migrations_test.go` asserts
+  the query plan, so a change that reintroduces the sort fails the build.
 - `db.GlobalDB()` is filled asynchronously, after `Start` has already returned to
-  its signal wait (`internal/core/start.go`), and stays nil forever if Postgres is
-  unreachable — the bot runs happily without a database. Callers must tolerate
-  nil rather than assume a live handle.
+  its signal wait (`internal/core/start.go`), and stays nil forever if the
+  database cannot be opened — the bot runs happily without a database. Callers
+  must tolerate nil rather than assume a live handle.
+- SQLite has one writer. The DSN sets `journal_mode(WAL)`, a `busy_timeout` and
+  `_txlock=immediate`, and the pool is small. Do not raise the pool size to
+  raise write throughput: writes are serialised regardless.
+- `_txlock=immediate` is load-bearing, not a default. A deferred transaction
+  that reads and then writes cannot always take the write lock afterwards, and
+  fails with `SQLITE_BUSY` in a way the busy timeout does not retry.
 - The cache in `internal/db/cache.go` is a process-local map with TTL, not Redis.
 
 ## Configuration
@@ -110,9 +146,9 @@ One root module, `github.com/Neon-Genesis-Linux/pen-bot`, one binary:
 - `ENV=production` selects INFO, anything else DEBUG (`internal/logger`).
 - `GUILD_ID` is optional: set it to sync commands to one guild (instant) instead
   of globally (slow to propagate).
-- For the database, `DATABASE_URL` wins outright; otherwise `DB_HOST`, `DB_PORT`,
-  `DB_USER`, `DB_PASSWORD`, `DB_NAME` are composed, and `DB_BOT_INSTANCE_ID`
-  renames the database to `pen_bot_<id>`. `POSTGRES_PASSWORD` is compose-only.
+- `DB_PATH` names the database file. `DB_BOT_INSTANCE_ID` names the file when
+  `DB_PATH` is unset, so that instances sharing a directory each get their own.
+  The container image sets `DB_PATH=/data/pen-bot.db` and mounts a volume there.
 - The compose file is `compose.yaml` (Compose v2); use `docker compose up`, or
   `docker compose watch` to honour the `develop.watch` rebuild. Keep
   `.dockerignore` — it is what keeps `.env` and the 52MB `custom-gcl` out of the

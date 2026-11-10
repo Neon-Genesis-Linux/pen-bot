@@ -4,8 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 )
 
+// GetGuild returns the stored settings for a guild, or nil when the guild has
+// no row yet.
 func GetGuild(ctx context.Context, db *DB, guildID string) (*Guild, error) {
 	if guildID == "" {
 		return nil, fmt.Errorf("guildID required")
@@ -31,20 +34,24 @@ func GetGuild(ctx context.Context, db *DB, guildID string) (*Guild, error) {
 	return &guild, nil
 }
 
+// UpsertGuild stores the settings for a guild, replacing any that are already
+// there.
 func UpsertGuild(ctx context.Context, db *DB, guildID string, settingsJSON string) error {
 	if guildID == "" {
 		return fmt.Errorf("guildID required")
 	}
+	now := time.Now().UTC()
 	_, err := db.ExecContext(ctx, `
 	INSERT INTO guilds (guild_id, settings_json, created_at, updated_at)
-	VALUES ($1, $2::jsonb, now(), now())
+	VALUES ($1, $2, $3, $4)
 	ON CONFLICT (guild_id) DO UPDATE SET
-		settings_json = EXCLUDED.settings_json,
-		updated_at = now()
-	`, guildID, settingsJSON)
+		settings_json = excluded.settings_json,
+		updated_at = $4
+	`, guildID, settingsJSON, now, now)
 	return err
 }
 
+// DeleteGuild removes the stored settings for a guild.
 func DeleteGuild(ctx context.Context, db *DB, guildID string) error {
 	if guildID == "" {
 		return fmt.Errorf("guildID required")
