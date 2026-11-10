@@ -5,8 +5,8 @@ cannot tell you:
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — checks to run and report, diff boundaries,
   Conventional Commits format.
-- [AI_POLICY.md](AI_POLICY.md) — disclosure and the `Assisted-by:` trailer for
-  tool-assisted work. Applies to agent-written code.
+- [AI_POLICY.md](AI_POLICY.md) — disclosure for tool-assisted work. Applies to
+  agent-written code.
 - [DOCUMENTATION.md](DOCUMENTATION.md) — how documentation is written, which
   content belongs where, and the Go doc comment rules CI does not check. Read it
   before adding exported identifiers.
@@ -124,6 +124,5 @@ One root module, `github.com/Neon-Genesis-Linux/pen-bot`, one binary:
   recent `git log`.
 - Do not push, open a pull request, or comment on an issue unless asked.
 - Never add `Signed-off-by`, `Co-developed-by`, or any other certification on a
-  contributor's behalf (see AI_POLICY.md). An `Assisted-by:` trailer is the
-  sanctioned form.
+  contributor's behalf (see AI_POLICY.md).
 - `.env` is gitignored and secret; keep it out of diffs.
