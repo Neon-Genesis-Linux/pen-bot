@@ -40,10 +40,9 @@ uv run sphinx-build -W -b html docs public
 - **Focused runs:** `go test ./internal/db/...`, `go test -run TestExpiry
   ./internal/db/`. Tests are pure unit tests — no Discord or network needed, and
   the database tests need no server either: they open a SQLite file in a
-  temporary directory. `internal/core` and `internal/db` have tests; the other
-  packages report "no test files". Tests of unexported helpers live in the
-  package under test (`package core`, `package db`); public-API tests live in
-  `package db_test`.
+  temporary directory. `internal/community`, `internal/core` and `internal/db`
+  have tests; the other packages report "no test files". Tests of unexported
+  helpers live in the package under test; public-API tests in `package db_test`.
 - `just format` applies `gofumpt`, which is stricter than the `gofmt` CI checks.
   CI deliberately checks only `gofmt`, so run `just format` before sending a
   change; the tree is kept gofumpt-clean.
