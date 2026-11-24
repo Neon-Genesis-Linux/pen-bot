@@ -180,7 +180,7 @@ func registerSelfTimeoutCommand() {
 					Name: "duration",
 					// Discord caps option descriptions at 100 characters and silently
 					// truncates past that, so keep this short if the wording changes.
-					Description: fmt.Sprintf("How long the self timeout should last (e.g. 30m, 1h10m, 1d) Accepted range: [%s, %gh]", selfTimeoutLower, selfTimeoutUpper.Hours()),
+					Description: fmt.Sprintf("How long the self timeout should last (e.g. 30m, 1h10m, 1d) Accepted range: [%s, %s]", core.FormatDuration(selfTimeoutLower), core.FormatDuration(selfTimeoutUpper)),
 					Required:    true,
 				},
 			},
