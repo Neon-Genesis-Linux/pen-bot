@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -253,6 +254,21 @@ func CloseDB() {
 }
 
 // ParseCleanupIntervalEnv returns the interval between cache cleanups.
+//
+// A value that is not a positive duration is ignored: StartCleanup cannot
+// build a ticker from zero or a negative interval, and the error would be
+// swallowed by the recover in Start.
 func ParseCleanupIntervalEnv(key string, defaultMinutes int) time.Duration {
-	return parseDurationEnv(key, time.Duration(defaultMinutes)*time.Minute)
+	fallback := time.Duration(defaultMinutes) * time.Minute
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := time.ParseDuration(value)
+	if err != nil || parsed <= 0 {
+		slog.Warn("invalid cache cleanup interval, using default",
+			"key", key, "value", value, "default", fallback)
+		return fallback
+	}
+	return parsed
 }
