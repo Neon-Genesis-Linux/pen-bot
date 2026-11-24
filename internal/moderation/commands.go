@@ -1,3 +1,7 @@
+// Package moderation provides the bot's moderation slash commands.
+//
+// Call Register before core.Start so the command definitions are synced and
+// the handlers are routed when the gateway opens.
 package moderation
 
 // Register registers the moderation commands.

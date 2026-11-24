@@ -19,6 +19,11 @@ func IsGuild[T interface{ GuildID() *snowflake.ID }](e T) bool {
 	return e.GuildID() != nil
 }
 
+// InteractionResponder is the part of an interaction event that the error
+// helpers need in order to reply.
+//
+// Both the slash-command and button-component events satisfy it, so the same
+// helper works before and after a response has been deferred.
 type InteractionResponder interface {
 	CreateMessage(messageCreate discord.MessageCreate, opts ...rest.RequestOpt) error
 	UpdateInteractionResponse(messageUpdate discord.MessageUpdate, opts ...rest.RequestOpt) (*discord.Message, error)

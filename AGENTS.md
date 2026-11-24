@@ -34,14 +34,19 @@ uv run sphinx-build -W -b html docs public
 - **Use `./custom-gcl`, never `golangci-lint`.** Stock `golangci-lint run` aborts
   with `plugin(nilaway): plugin "nilaway" not found`, because `nilaway` is a
   module plugin. `custom-gcl` is a gitignored build of golangci-lint v2.13.2 +
-  NilAway from `.custom-gcl.yml`; `nix develop` builds it on shell entry. Re-run
-  `golangci-lint custom` after editing `.custom-gcl.yml` or the pinned version.
+  NilAway from `.custom-gcl.yml`. Build it once with `golangci-lint custom`
+  after cloning, and again after editing `.custom-gcl.yml` or the pinned
+  version. `nix develop` provides `golangci-lint` but does not build the binary.
 - **Focused runs:** `go test ./internal/db/...`, `go test -run TestExpiry
   ./internal/db/`. Tests are pure unit tests — no Discord or network needed, and
   the database tests need no server either: they open a SQLite file in a
-  temporary directory. Only `internal/db` has tests; everything else reports "no
-  test files". Unexported-helper tests live in `package db`, public-API tests in
+  temporary directory. `internal/core` and `internal/db` have tests; the other
+  packages report "no test files". Tests of unexported helpers live in the
+  package under test (`package core`, `package db`); public-API tests live in
   `package db_test`.
+- `just format` applies `gofumpt`, which is stricter than the `gofmt` CI checks.
+  CI deliberately checks only `gofmt`, so run `just format` before sending a
+  change; the tree is kept gofumpt-clean.
 - `pre-commit run --all-files` is a superset of `ci.yml` (adds staticcheck,
   gosec, govulncheck). There is no hook for the docs build, so run that by hand.
   `go-vulncheck-repo-mod` is **not** in CI and fails whenever the local
@@ -51,8 +56,9 @@ uv run sphinx-build -W -b html docs public
 ## Layout
 
 One root module, `github.com/Neon-Genesis-Linux/pen-bot`, one binary:
-`cmd/pen-fun`. `internal/core` owns process-wide state and startup;
-`community`, `moderation`, `db`, `logger` are libraries it does not import back.
+`cmd/pen-fun`. `internal/core` owns process-wide state and startup.
+`community` and `moderation` import `core` to register commands; `core` imports
+`db` to open the database. Nothing imports `core` back from `db` or `logger`.
 
 - **Registration order is a contract.** `community.Register()` and any
   `core.RegisterIntents(...)` must run *before* `core.Start()` (see

@@ -1,3 +1,7 @@
+// Package community provides the bot's community-facing slash commands.
+//
+// Call Register before core.Start so the command definitions are synced and
+// the handlers are routed when the gateway opens.
 package community
 
 import (

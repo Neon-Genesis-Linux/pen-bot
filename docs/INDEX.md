@@ -46,9 +46,8 @@ ARCHITECTURE
   end to end, and the dependencies allowed between packages.
 
 OPERATIONS
-: Directory with documentation regarding day-to-day running: deployments,
-  the database schema and its migrations, and operational notes for scheduled
-  background work.
+: Directory with documentation regarding day-to-day running. `DATABASE.md` is
+  written; deployment and scheduled background work are planned.
 
 ## Indices
 

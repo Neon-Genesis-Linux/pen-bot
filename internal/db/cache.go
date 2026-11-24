@@ -16,6 +16,10 @@ var (
 	mcMu sync.RWMutex
 )
 
+// SetCacheEntry stores valueJSON under key for ttl.
+//
+// A non-positive ttl stores the value without an expiry, so it stays until
+// DeleteCacheEntry removes it or the process exits.
 func SetCacheEntry(key string, valueJSON []byte, ttl time.Duration) {
 	mcMu.Lock()
 	defer mcMu.Unlock()
@@ -26,6 +30,10 @@ func SetCacheEntry(key string, valueJSON []byte, ttl time.Duration) {
 	mc[key] = memCacheEntry{data: valueJSON, expiresAt: expiresAt}
 }
 
+// GetCacheEntry returns the value stored under key, and whether it was found.
+//
+// An expired entry is deleted and reported as absent, so callers never see a
+// value past its time to live.
 func GetCacheEntry(key string) ([]byte, bool) {
 	mcMu.RLock()
 	e, ok := mc[key]
@@ -42,12 +50,18 @@ func GetCacheEntry(key string) ([]byte, bool) {
 	return e.data, true
 }
 
+// DeleteCacheEntry removes the value stored under key, if any.
 func DeleteCacheEntry(key string) {
 	mcMu.Lock()
 	defer mcMu.Unlock()
 	delete(mc, key)
 }
 
+// StartCleanup removes expired entries until ctx is cancelled.
+//
+// It is not required for correctness: GetCacheEntry drops an expired entry
+// when it is read. Cleanup exists to stop expired values accumulating when a
+// key is never read again.
 func StartCleanup(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()

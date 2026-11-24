@@ -97,7 +97,6 @@ func handleSelfTimeoutCommandConfirm(_ discord.ButtonInteractionData, e *handler
 	_, err = e.Client().Rest.UpdateMember(*GuildID, userID, discord.MemberUpdate{
 		CommunicationDisabledUntil: omit.New(&until),
 	}, rest.WithReason("self-timeout"))
-
 	if err != nil {
 		slog.Error("self-timeout: member update failed",
 			slog.String("guild", GuildID.String()),

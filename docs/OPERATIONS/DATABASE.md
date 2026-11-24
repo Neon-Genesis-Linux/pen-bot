@@ -70,9 +70,11 @@ scanning it into a `time.Time` fails. Select the column itself instead.
 ## Migrations
 
 Migrations are files in `internal/db/migrations/`, named `NNN_name.sql`. The
-running bot applies them at startup, before it serves any command, so a
-deployment needs no separate migration step. Each file runs in one transaction,
-and its name is recorded in `schema_migrations` so it is not applied twice.
+running bot applies them in the background after it starts serving commands, so
+a deployment needs no separate migration step. Each file runs in one
+transaction, and its name is recorded in `schema_migrations` so it is not
+applied twice. A command used before the database is ready sees `nil` from
+`db.GlobalDB()`; callers handle that rather than assuming a live handle.
 
 A migration must be plain DDL. The file is handed to the database as one
 statement, so a semicolon inside a string literal is safe.
@@ -87,36 +89,52 @@ new migration file rather than editing an old one.
 The database is one file, but while the bot is running it also has a write-ahead
 log beside it. Copying only the `.db` file would miss the most recent writes.
 
-Take a consistent copy with `VACUUM INTO`, which writes a complete snapshot
-without stopping the bot:
+`/data` is a path inside the container, and the image has no SQLite client.
+`docker compose cp` copies the files out without needing a shell in the
+container. Run these commands on the host, from the directory holding
+`compose.yaml`.
 
-```bash
-sqlite3 /data/pen-bot.db "VACUUM INTO '/data/backup-$(date +%F).db'"
-```
-
-Restore by stopping the bot and putting the snapshot back in place:
+Stop the bot, copy the whole directory out, and start it again:
 
 ```bash
 docker compose stop app
-cp backup-2026-11-10.db /data/pen-bot.db
-rm -f /data/pen-bot.db-wal /data/pen-bot.db-shm
+docker compose cp app:/data ./pen-bot-data
 docker compose start app
 ```
 
-The bot applies any pending migrations on the next start.
+Stopping first lets SQLite checkpoint the write-ahead log, so
+`./pen-bot-data/pen-bot.db` is a complete snapshot on its own.
+
+Copying a running database is not a consistent backup: the write-ahead log can
+change while it is being read. A snapshot taken without stopping the bot needs
+`VACUUM INTO` against the live file, which requires a SQLite client with access
+to the volume. The image has no such client, so the stop-and-copy path above is
+the one that works everywhere.
+
+Restore by stopping the bot and copying the snapshot back over the file it
+reads:
+
+```bash
+docker compose stop app
+docker compose cp backup-2026-11-10.db app:/data/pen-bot.db
+docker compose start app
+```
+
+Use a snapshot taken while the bot was stopped, so there are no outstanding
+writes to replay. The bot applies any pending migrations on the next start.
 
 ## Inspecting the data
 
-Any SQLite client can open the file, and the `sqlite3` command line tool is
-enough for most questions:
+The image has no SQLite client, so copy the directory out as above and open the
+file on the host. The `sqlite3` command line tool is enough for most questions:
 
 ```bash
-sqlite3 /data/pen-bot.db ".tables"
-sqlite3 /data/pen-bot.db "SELECT * FROM moderation_logs ORDER BY created_at DESC LIMIT 10;"
+sqlite3 ./pen-bot-data/pen-bot.db ".tables"
+sqlite3 ./pen-bot-data/pen-bot.db "SELECT * FROM moderation_logs ORDER BY created_at DESC LIMIT 10;"
 ```
 
-Stop the bot first if you intend to write, so that the two do not contend for
-the same lock.
+Do not write to a copy the running bot is still using: the two would contend
+for the same lock, and the copy would not reflect the bot's writes.
 
 ## Concurrency
 

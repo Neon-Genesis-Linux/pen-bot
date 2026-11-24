@@ -1,3 +1,8 @@
+// Package core owns the process-wide state and startup of the bot.
+//
+// It holds the command definitions, handlers and gateway intents that Start
+// reads once at startup. Packages add to that state before Start runs; see
+// RegisterCommands, Mux and RegisterIntents.
 package core
 
 import (
