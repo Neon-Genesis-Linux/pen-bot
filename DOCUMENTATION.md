@@ -50,9 +50,11 @@ code would not be clear without it. A comment that restates the name is noise.
    single-goroutine), and special cases.
 5. **Use one receiver name across a type's methods** so `go doc` lists them
    consistently.
-6. **One sentence per line.** `gofmt` preserves your line breaks rather than
-   rewrapping, so diffs stay limited to the lines that actually changed.
-   Rewrapping happens when `go doc` and pkg.go.dev print, not in the source.
+6. **Wrap prose at 80 columns.** `gofmt` preserves your line breaks rather
+   than rewrapping, so diffs stay limited to the lines that actually changed.
+   A sentence may span several lines, and a line may hold the end of one
+   sentence and the start of the next. Rewrapping happens when `go doc` and
+   pkg.go.dev print, not in the source.
 
 ### Package comments
 
@@ -159,7 +161,8 @@ The output lands in `public/`, which is not tracked.
 
 ### Files
 
-Target layout, as pages land. `INDEX.md` is the only page so far:
+Target layout. Pages marked `planned` do not exist yet; add them to the toctree
+in the same change that creates them.
 
 ```
 pyproject.toml           Sphinx and MyST, the only Python dependencies
@@ -167,10 +170,11 @@ uv.lock                  committed, so a build resolves the same versions
 docs/
 ├── conf.py             Sphinx build config
 ├── INDEX.md            entry point; holds the toctree
-├── SETUP.md
-├── ARCHITECTURE.md
+├── SETUP.md            planned
+├── ARCHITECTURE.md     planned
 └── OPERATIONS/         one directory per operational area
-    └── DEPLOYMENT.md
+    ├── DATABASE.md     the local SQLite file and how to back it up
+    └── DEPLOYMENT.md   planned
 ```
 
 - One topic per file. Split a file before it grows past a few screens.
@@ -181,8 +185,8 @@ docs/
 - Names are the document names, and document names are case sensitive: a toctree
   entry or `{doc}` role must match the file's case exactly. Sphinx defaults
   `root_doc` to `index`, so a build config must set `root_doc = "INDEX"` to
-  match. `master_doc` is the alias of the same setting; `root_doc` is the name
-  to write.
+  match. `master_doc` is the original setting and `root_doc` is its alias; the
+  two set each other. `root_doc` is the name to write.
 - Anything in `docs/` belongs in the toctree in `INDEX.md`, or it will be
   missed.
 

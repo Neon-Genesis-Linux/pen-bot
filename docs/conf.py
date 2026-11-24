@@ -18,9 +18,9 @@ author = "Neon Genesis Linux"
 # and README.md. Omitting this fails the build outright, because Sphinx looks
 # for a lower case index that does not exist.
 #
-# root_doc is the current name for this. master_doc is its alias: the two set
-# each other, and the Sphinx reference documents master_doc as the alias added
-# in 4.0. Neither is deprecated, so either works; root_doc is the one to write.
+# root_doc is the name to write. master_doc is the original setting: the two
+# set each other, and the Sphinx reference documents root_doc as the alias
+# added in 4.0. Neither is deprecated, so either works.
 root_doc = "INDEX"
 
 # The tree is MyST markdown rather than reStructuredText. See DOCUMENTATION.md

@@ -1,3 +1,7 @@
+// Package main runs the pen-fun Discord bot.
+//
+// It registers the community and moderation commands before starting core,
+// because Start reads the command definitions once when it syncs them.
 package main
 
 import (

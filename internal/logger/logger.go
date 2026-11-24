@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	var handlers = buildHandlers()
+	handlers := buildHandlers()
 	logger := slog.New(slog.NewMultiHandler(handlers...))
 	slog.SetDefault(logger)
 }
@@ -18,7 +18,7 @@ func init() {
 func buildHandlers() (handlers []slog.Handler) {
 	var logLevel slog.Level
 
-	if (os.Getenv("ENV")) == "production" {
+	if os.Getenv("ENV") == "production" {
 		logLevel = slog.LevelInfo
 	} else {
 		logLevel = slog.LevelDebug
