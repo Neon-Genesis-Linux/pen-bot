@@ -50,3 +50,17 @@ func TestParseCleanupIntervalEnv(t *testing.T) {
 		t.Fatalf("got %v, want %v", got, 15*time.Minute)
 	}
 }
+
+func TestParseCleanupIntervalEnvRejectsNonPositive(t *testing.T) {
+	const key = "TEST_CLEANUP_INVALID"
+	fallback := 15 * time.Minute
+
+	for _, value := range []string{"0", "0s", "-1s", "not-a-duration"} {
+		t.Run(value, func(t *testing.T) {
+			t.Setenv(key, value)
+			if got := ParseCleanupIntervalEnv(key, 15); got != fallback {
+				t.Errorf("got %v, want %v", got, fallback)
+			}
+		})
+	}
+}
