@@ -23,10 +23,12 @@ var tldrClient = resty.New().SetTimeout(10 * time.Second).
 var (
 	errTldrNotFound = errors.New("page not found")
 
-	// Reject only characters that make the URL ambiguous or can't appear in a real
-	// command name. Everything structural is neutralised by url.PathEscape, whose
-	// pass-through set is limited to unreserved path characters, so this stays
-	// correct as tldr adds pages. The length cap keeps us under GitHub's URL limit.
+	// Reject the characters that would change the URL's structure: control
+	// characters, space, and the path, query, fragment and escape separators
+	// `/`, `?`, `#` and `\`. url.PathEscape escapes the remaining characters
+	// that need it; the ones it leaves alone (letters, digits, `-._~` and
+	// `$&+=:@`) are all legal in a path segment and cannot start a query or
+	// fragment. The length cap bounds the URL as tldr adds pages.
 	tldrCommandPattern = regexp.MustCompile(`^[^\x00-\x20\x7f/?#\\]{1,64}$`)
 )
 
